@@ -30,7 +30,7 @@ Eg: https://www.[Your EPR-enabled website].com/epr-manifest.json
 
 ## More Information
 
-TODO: Link to future EPR blog post
+EPR blog post: http://randomdross.blogspot.com/2014/08/entry-point-regulation-for-web-apps.html
 
 EPR Google Group: https://groups.google.com/forum/#!forum/epr-list
 
