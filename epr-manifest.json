@@ -1,0 +1,16 @@
+      {
+       "site": "https://[Your EPR-enabled website]",
+       "maxAge": 31536000,
+       "reportUrl": "https://[Report URL]",
+       "defaultNavBehavior": "block",
+       "defaultResBehavior": "block",
+       "rules": 
+       [
+         { "path": "/", "types": [ "navigation" ], "allowData": false },
+         { "regex": "^/\\d+$", "types": [ "navigation" ], "allowData": false },
+         { "path": "/image", "types": [ "image" ], "allowData": true },
+         { "regex": "^/(scoreboard|random|favorites|recentvisits|create)$", "types": [ "navigation" ], "allowData": false },
+         { "regex": "^/(recent|popular|metrics|template|search)$", "types": [ "navigation" ], "allowData": true },
+       ]
+      }
+
