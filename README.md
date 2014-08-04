@@ -31,6 +31,7 @@ Eg: https://www.[Your EPR-enabled website].com/epr-manifest.json
 ## More Information
 
 TODO: Link to future EPR blog post
+
 TODO: Link to future EPR Google Group
 
 See background.js for a list of TODOs for future improvements to the EPR Chrome extension.
