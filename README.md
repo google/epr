@@ -25,12 +25,13 @@ This header lets the EPR Chrome extension know to download and store the EPR man
 
 The background.js file contains a hardcoded example manifest, complete with comments.  (See eprDataStatic.)  The epr-manifest.json file contains the same manifest, just without comments.  Edit epr-manifest.json as you'd like and host it at the root.  
 
-Eg: https://www.[Your EPR-enabled website].com/epr-manifest.json
+Eg: [https://www.[Your EPR-enabled website].com/epr-manifest.json](https://www.[Your EPR-enabled website].com/epr-manifest.json)
 
 
 ## More Information
 
-TODO: Link to future EPR blog post
-TODO: Link to future EPR Google Group
+EPR blog post: http://randomdross.blogspot.com/2014/08/entry-point-regulation-for-web-apps.html
+
+EPR Google Group: https://groups.google.com/forum/#!forum/epr-list
 
 See background.js for a list of TODOs for future improvements to the EPR Chrome extension.
