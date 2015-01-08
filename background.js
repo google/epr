@@ -457,6 +457,10 @@ function xhrLoad(evt) {
 
 function handleXHRResponse(xhr)
 {
+  var contentType;
+  var failedParse;
+  var receivedManifest, receivedManifestPos;
+
   // Validate the response is of the right type and of a reasonable size
   contentType = xhr.getResponseHeader("Content-Type");
   if ((xhr.status === 200) && contentType && (contentType.indexOf("application/json") == 0)
@@ -495,8 +499,7 @@ function lateRegulator(details) {
   var retVal = false;
   var matchedStoredManifest;
   var xhr;
-  var contentType;
-  var receivedManifest, receivedManifestPos
+  var receivedManifest, receivedManifestPos;
   var bailOnRegulation;
   var sawEPRHeader = false;
 
