@@ -1,11 +1,11 @@
 // Copyright 2014 Google Inc. All rights reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 //     http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,7 +17,7 @@
 // Normally download epr-manifest.json instead
 var eprDataStatic =
   {
-    "manifests": 
+    "manifests":
     [
       {
        "site": "https://[Your EPR-enabled website]",
@@ -25,9 +25,9 @@ var eprDataStatic =
        "reportUrl": "https://[Report URL]",   /* Currently ignored */
        "defaultNavBehavior": "block",   /* Currently ignored */
        "defaultResBehavior": "block",   /* Currently ignored */
-       "rules": 
+       "rules":
        [
-         /* 
+         /*
             This is the list of allowed entry points
             path: string for full path comparison (don't combine w/regex)
             regex: regex for full path comparison
@@ -69,10 +69,10 @@ var refererTracking = { };
 // Other misc notes:
 //   - Requests to pass unvalidated if origins...
 //     ...match what's currently input to the Omnibox
-//       - Ack, can't really do this...  
+//       - Ack, can't really do this...
 //         - Better idea: allow all top-level blank-referer GET navigations that have no querystring or hash (path-based XSS is rare)
-//         - Maybe we open this up to allow any referer?  (or just any GET request w/o querystring or hash)  Then we don't need the 
-//           allowData flag in the manifest to specify if querystring/hash/postdata is allowed.  
+//         - Maybe we open this up to allow any referer?  (or just any GET request w/o querystring or hash)  Then we don't need the
+//           allowData flag in the manifest to specify if querystring/hash/postdata is allowed.
 //           - I'm leaning towards not doing this, but it's one one thing to consider.
 //     ...are in the user's bookmarks
 //       - Done
@@ -302,7 +302,7 @@ function checkManifests(i, detailsType, urlPathname, urlSearch, urlHash, urlMeth
       localStorage.removeItem("ReDoS-path");
       localStorage.removeItem("ReDoS-regex");
 
-      if (reMatches != null) 
+      if (reMatches != null)
       {
         retVal = false;
         break;
@@ -324,7 +324,7 @@ function grovelBookmarks(results) {
     } catch (e) { }
     try {
       grovelBookmarks(results[i].children);
-    } catch (e) { } 
+    } catch (e) { }
   }
 }
 
@@ -339,14 +339,14 @@ function configStorage()
 
     request.onupgradeneeded = function(e) {
       var db = e.target.result;
-      
+
       e.target.transaction.onerror = EPRStorage.indexedDB.onerror;
 
       if(db.objectStoreNames.contains("manifest")) {
         db.deleteObjectStore("manifest");
       }
 
-      var store = db.createObjectStore("manifest", 
+      var store = db.createObjectStore("manifest",
         {keyPath: "timeStamp"});
     };
 
@@ -415,7 +415,7 @@ function configStorage()
     var request = store.delete(id);
 
     request.onsuccess = function(e) {
-      
+
     };
 
     request.onerror = function(e) {
@@ -459,8 +459,8 @@ function lateRegulator(details) {
     // Don't let multiple x-epr headers function
     if (sawEPRHeader) break;
 
-    if ((details.responseHeaders[j].name.toLowerCase() === 'x-epr') || cheatCode) {
-      if ((details.responseHeaders[j].value.charAt(0) === '1') || cheatCode) {
+    if ((details.responseHeaders[j].name.toLowerCase() === 'x-epr')) {
+      if ((details.responseHeaders[j].value.charAt(0) === '1')) {
         // Now we know X-EPR is on the response.  Go download and evaluate the manifest as necessary.
         sawEPRHeader = true;
 
@@ -474,7 +474,7 @@ function lateRegulator(details) {
         else
         {
           bailOnRegulation = noRefererCheck(details, urlSearch, urlHash);
-        }        
+        }
 
         // We do actually need to validate the manifest here, to cover the case where a request is initiated before
         //  there was a manifest (no validation), but by the time we get the response there is already a manifest
@@ -506,8 +506,8 @@ function lateRegulator(details) {
           //  case where a sync request for a URL is made when an async request for the same URL is pending.  It's
           //  also just a wierd situation when an async request goes out but then a secondary sync request went out
           //  for the same URL.
-          // Anyway, going 100% synchronous eliminates the problems, reduces code complexity, and is reasonable given 
-          //  that a manifest fetch is a rare operation.  
+          // Anyway, going 100% synchronous eliminates the problems, reduces code complexity, and is reasonable given
+          //  that a manifest fetch is a rare operation.
           console.log("Making sync manifest req for: " + details.url);
           xhr = new XMLHttpRequest();
 
@@ -522,14 +522,14 @@ function lateRegulator(details) {
 
           // Validate the response is of the right type and of a reasonable size
           contentType = xhr.getResponseHeader("Content-Type");
-          if ((xhr.status === 200) && contentType && (contentType.indexOf("application/json") == 0) 
+          if ((xhr.status === 200) && contentType && (contentType.indexOf("application/json") == 0)
               && (xhr.responseText.length < 5242880))
           {
             failedParse = false;
             try {
               receivedManifest = JSON.parse(xhr.responseText);
-            } catch (e) { 
-              failedParse = true; 
+            } catch (e) {
+              failedParse = true;
             }
 
             if (!failedParse)
@@ -537,9 +537,9 @@ function lateRegulator(details) {
               // Don't let a manifest specify what site it's for, override the site
               receivedManifest.site = urlProtocol + "//" + urlHostname;
 
+              receivedManifestPos = eprData.manifests.push(receivedManifest) - 1;
               if (!bailOnRegulation)
               {
-                receivedManifestPos = eprData.manifests.push(receivedManifest) - 1;
                 retVal = checkManifests(receivedManifestPos, details.type, urlPathname, urlSearch, urlHash, details.method);
               }
 
@@ -594,5 +594,3 @@ chrome.bookmarks.getTree(grovelBookmarks);
 chrome.webRequest.onBeforeSendHeaders.addListener(regulator, {urls: ["<all_urls>"]}, ["blocking", "requestHeaders"]);
 chrome.webRequest.onHeadersReceived.addListener(lateRegulator, {urls: ["<all_urls>"]}, ["blocking", "responseHeaders"]);
 chrome.webRequest.onCompleted.addListener(deleteReferer, {urls: ["<all_urls>"]});
-
-
