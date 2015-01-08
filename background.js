@@ -583,7 +583,12 @@ function lateRegulator(details) {
           xhr.open("GET", urlProtocol + "//" + urlHostname + "/epr-manifest.json", true);
 
           console.log("Making async manifest req for: " + details.url);
-          xhr.send(null);
+          try {
+            xhr.send(null);
+          } catch (e)
+          {
+            console.log("xhr error on manifest req for " + details.url);
+          }
 
           // Ugly deep copy
           receivedManifest = JSON.parse(JSON.stringify(eprNoDataManifest));
