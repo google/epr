@@ -44,6 +44,22 @@ var eprDataStatic =
     ]
   };
 
+// "NO DATA" rule as described here:
+//  http://lists.w3.org/Archives/Public/public-webappsec/2014Nov/0018.html
+var eprNoDataManifest =
+  {
+    "site": "",
+    "maxAge": 90,
+    "reportUrl": "",   /* Currently ignored */
+    "defaultNavBehavior": "block",   /* Currently ignored */
+    "defaultResBehavior": "allow",   /* Currently ignored */
+    "rules":
+    [
+      { "regex": ".*", "types": [ "image", "script", "stylesheet", "xhr", "other" ], "allowData": true },
+      { "regex": ".*", "types": [ "navigation" ], "allowData": false },
+    ]
+  }
+
 // Wipe out example in eprDataStatic, defer to downloaded manifest
 // Comment this out to use the hardcoded manifest above
 eprDataStatic = { "manifests": [ ] };
@@ -431,6 +447,48 @@ function configStorage()
   EPRStorage.indexedDB.open();
 }
 
+function xhrError(evt) {
+  // We hit this when a connection is reset, etc.
+}
+
+function xhrLoad(evt) {
+  handleXHRResponse(evt.target);
+}
+
+function handleXHRResponse(xhr)
+{
+  // Validate the response is of the right type and of a reasonable size
+  contentType = xhr.getResponseHeader("Content-Type");
+  if ((xhr.status === 200) && contentType && (contentType.indexOf("application/json") == 0)
+    && (xhr.responseText.length < 5242880))
+  {
+    failedParse = false;
+    try {
+      receivedManifest = JSON.parse(xhr.responseText);
+    } catch (e) {
+      failedParse = true;
+    }
+
+    if (!failedParse)
+    {
+      // Don't let a manifest specify what site it's for, override the site
+      receivedManifest.site = xhr._urlProtocol + "//" + xhr._urlHostname;
+
+      receivedManifestPos = eprData.manifests.push(receivedManifest) - 1;
+
+      // Need to re-serialize the manifest if only because we changed the site
+      //  Then persist it in indexedDB
+      EPRStorage.indexedDB.addManifest(JSON.stringify(receivedManifest));
+    }
+  }
+  else
+  {
+    // Push a manifest entry that prevents more manifest fetch attempts for the duration of this browsing session, for this host
+    //  If the JSON fails to parse then we still won't get here, but no big deal
+    eprData.manifests.push( { "site": xhr._urlProtocol + "//" + xhr._urlHostname, "sessionIgnore": true } );
+  }
+}
+
 // Operates on responses that come in to check for and handle X-EPR header
 function lateRegulator(details) {
   var urlProtocol, urlHostname, urlPathname, urlSearch, urlHash;
@@ -438,7 +496,7 @@ function lateRegulator(details) {
   var matchedStoredManifest;
   var xhr;
   var contentType;
-  var receivedManifest, receivedManifestPos, failedParse;
+  var receivedManifest, receivedManifestPos
   var bailOnRegulation;
   var sawEPRHeader = false;
 
@@ -500,7 +558,7 @@ function lateRegulator(details) {
         // We didn't match an existing manifest.  Try to fetch one if necessary.
         if (!matchedStoredManifest)
         {
-          // Do a sync fetch
+          // Fetch the manifest
           //  XSS on navigation can happen immediately, doesn't require the user to first auth to the site as with XSRF
           // Previously we were doing async fetches when XSS wasn't a concern, but it turns out XHR can hang in the
           //  case where a sync request for a URL is made when an async request for the same URL is pending.  It's
@@ -508,51 +566,32 @@ function lateRegulator(details) {
           //  for the same URL.
           // Anyway, going 100% synchronous eliminates the problems, reduces code complexity, and is reasonable given
           //  that a manifest fetch is a rare operation.
-          console.log("Making sync manifest req for: " + details.url);
+          // 1/8/2015: Plot twist: The synchronous approach is considered problematic.  Even though it wouldn't be a
+          //  common case, blocking downloads in this way would not be great.  Moving to the "NO DATA" approach
+          //  described here: http://lists.w3.org/Archives/Public/public-webappsec/2014Nov/0018.html
+          //  This moves us back to model where we now will always download manifests asynchronously.
+
           xhr = new XMLHttpRequest();
+          xhr.addEventListener("error", xhrError, false);
+          xhr.addEventListener("load", xhrLoad, false);
+          xhr._urlProtocol = urlProtocol;
+          xhr._urlHostname = urlHostname;
 
-          xhr.open("GET", urlProtocol + "//" + urlHostname + "/epr-manifest.json", false);
+          xhr.open("GET", urlProtocol + "//" + urlHostname + "/epr-manifest.json", true);
 
-          try {
-            xhr.send(null);
-          } catch (e)
+          console.log("Making async manifest req for: " + details.url);
+          xhr.send(null);
+
+          // Ugly deep copy
+          receivedManifest = JSON.parse(JSON.stringify(eprNoDataManifest));
+
+          // Don't let a manifest specify what site it's for, override the site
+          receivedManifest.site = urlProtocol + "//" + urlHostname;
+
+          receivedManifestPos = eprData.manifests.push(receivedManifest) - 1;
+          if (!bailOnRegulation)
           {
-            console.log("Sync xhr error on manifest req for " + details.url);
-          }
-
-          // Validate the response is of the right type and of a reasonable size
-          contentType = xhr.getResponseHeader("Content-Type");
-          if ((xhr.status === 200) && contentType && (contentType.indexOf("application/json") == 0)
-              && (xhr.responseText.length < 5242880))
-          {
-            failedParse = false;
-            try {
-              receivedManifest = JSON.parse(xhr.responseText);
-            } catch (e) {
-              failedParse = true;
-            }
-
-            if (!failedParse)
-            {
-              // Don't let a manifest specify what site it's for, override the site
-              receivedManifest.site = urlProtocol + "//" + urlHostname;
-
-              receivedManifestPos = eprData.manifests.push(receivedManifest) - 1;
-              if (!bailOnRegulation)
-              {
-                retVal = checkManifests(receivedManifestPos, details.type, urlPathname, urlSearch, urlHash, details.method);
-              }
-
-              // Need to re-serialize the manifest if only because we changed the site
-              //  Then persist it in indexedDB
-              EPRStorage.indexedDB.addManifest(JSON.stringify(receivedManifest));
-            }
-          }
-          else
-          {
-            // Push a manifest entry that prevents more manifest fetch attempts for the duration of this browsing session, for this host
-            //  If the JSON fails to parse then we still won't get here, but no big deal
-            eprData.manifests.push( { "site": urlProtocol + "//" + urlHostname, "sessionIgnore": true } );
+            retVal = checkManifests(receivedManifestPos, details.type, urlPathname, urlSearch, urlHash, details.method);
           }
         }
       }
