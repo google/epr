@@ -1,0 +1,116 @@
+<h1>Entry Point Regulation for Web Applications</h1>
+
+<pre class='metadata'>
+Shortname: epr
+Level: 1
+Status: FPWD
+Group: webappsec
+ED: http://dev.w3.org/webappsec/epr/
+Editor: David Ross, Google, mailto:drx@google.com
+Editor: Mike West, Google, mailto:mkwst@google.com
+Abstract: This specification describes the implementation of Entry Point Regulation (EPR), a scheme enabling web browsers to enforce a application-provided manifest of entry points.  Entry Point Regulation provides a mechanism for web applications to prevent Cross-Site Scripting (XSS) and Cross-Site Request Forgery (XSRF) vulnerabilities.
+</pre>
+
+<h2 id="intro">
+Introduction</h2>
+
+  <em>This section is not normative.</em>
+
+  EPR provides a browser-enforced mechanism for validating an entry point
+  policy supplied with a web application.  External references and navigations
+  to non-entry points can then be restricted based on this policy.
+
+  Entry point regulation may be considered an implementation of concepts
+  introduced by Charlie Reis et al. in <a href="https://4310b1a9-a-c71d7a1b-s-sites.googlegroups.com/a/charlesreis.com/home/research/publications/ccs-2011.pdf?attachauth=ANoY7crroMPZ8umT9C38aItbcX3KhFOTztxmUMm07dLREautLTKUn160PBFvXIdkcC5PJ9ZVgyrrgO0hkIelY1br-vw0KVw_pAxFpWk0-USk6RrSOWBBZ_vZ6S_rBX_sOEASlOPMFx40oBAv6q4AsfRH8DsKElBhVC_KvFY1UF314tTiiN-LYuUbJtggyIal-OqetUYxW3z_eeDWVgcVJU9sQMEormAAAaNhu3j96oQoIfPAep3rFx4%3D&attredirects=0">
+  App Isolation: Get the Security of Multiple Browsers with Just One</a>.
+
+<h2 id="usageExamples">
+Usage Examples</h2>
+
+  <em>This section is not normative.</em>
+
+  This section shows how developers can make use of the various features of
+  this specification.
+
+<h3 id="exampleManifest">
+Example manifest</h3>
+
+  <em>This section is not normative.</em>
+
+  The following shows a typical manifest.
+
+  ...TBD...
+
+<h3 id="exampleHeader">
+Using the EPR HTTP response header to link to a manifest</h3>
+
+  <em>This section is not normative.</em>
+
+  ...TBD...
+
+<h2 id="Manifest">
+Manifest and its members</h2>
+
+EPR manifests are JSON-based and overlap syntactically with <a href="http://www.w3.org/TR/appmanifest/">
+web application manifests.</a>
+
+...More on EPR manifests...
+
+<h3 id="manifestSite">
+<code>site</code> member
+</h3>
+
+The site member is the URL for which the manifest should apply.  The steps for
+processing the site member are given by the following algorithm.  The
+algorithm returns a URL.
+
+<dfn id="dfn-hasownproperty">HasOwnProperty</dfn>
+
+<dfn id="dfn-getownproperty">GetOwnProperty</dfn>
+
+[The following is a simple adaptation from text in the manifest spec, at the
+moment.]
+
+<ol>
+<li>If <a>HasOwnProperty</a>(<i>manifest</i>, "site") returns <code>false</code>, then return <code>undefined</code>.</li>
+<li>Let <i>value</i> be the result of calling the <a>GetOwnProperty</a> internal method of the <i>manifest</i> with argument "<code>site</code>".</li>
+</ol>
+
+...etc...
+
+<h3 id="manifestMaxAge">
+maxAge
+</h3>
+
+...etc...
+
+<h2 id="responseHeader">
+EPR HTTP response header
+</h2>
+
+[More about the EPR header]
+
+<h2 id="manifestHandling">
+Manifest Handling</h2>
+
+<h3 id="preReq">
+Pre-Request Processing</h3>
+
+[Steps taken by a UA prior to an HTTP request being sent out.]
+
+<h3 id="postRes">
+Post-Response Processing</h3>
+
+[Steps taken by a UA immediately after a HTTP response is received, but before
+rendering content from the response.]
+
+<h2 id="securityConsiderations">
+Security Considerations</h2>
+
+[Discuss regex DoS, for example.]
+
+<h2 class=no-num id="acknowledgments">
+Acknowledgments</h2>
+
+  Thanks for feedback and contributions from
+  ...
